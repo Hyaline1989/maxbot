@@ -1,0 +1,23 @@
+[Unit]
+Description=MAX Bot Bitrix24 read-only poller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=maxbot_compl_usr
+WorkingDirectory=/var/www/maxbot_compl_usr/data/www/maxbot.complect.org
+EnvironmentFile=/var/www/maxbot_compl_usr/data/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/var/www/maxbot_compl_usr/data/www/maxbot.complect.org/.venv/bin/python -m maxbot.poller_app
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

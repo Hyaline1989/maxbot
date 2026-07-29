@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.agents/
+.codex/
+AGENTS.md
+*.zip
+data/*.sqlite3
+data/*.db

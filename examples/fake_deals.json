@@ -1,0 +1,27 @@
+[
+  {
+    "deal_id": "TEST-1001",
+    "candidate_title": "Соколов Артём Ильич",
+    "full_name": "Соколов Артём Ильич",
+    "birth_date": "14.02.1997",
+    "phone": "+7 900 000-11-22",
+    "object_name": "Тестовый объект Север",
+    "manager_name": "Тестовый менеджер",
+    "directed_at": "2026-07-23T10:15:00+03:00",
+    "planned_arrival": "30.07.2026",
+    "deal_url": "https://example.invalid/deal/TEST-1001"
+  },
+  {
+    "deal_id": "TEST-1002",
+    "candidate_title": "Петрова Мария Олеговна",
+    "full_name": "Петрова Мария Олеговна",
+    "birth_date": "05.09.1994",
+    "phone": "8 (900) 000-33-44",
+    "object_name": "",
+    "manager_name": "Тестовый менеджер",
+    "directed_at": "2026-07-23T11:00:00+03:00",
+    "planned_arrival": "",
+    "deal_url": "https://example.invalid/deal/TEST-1002"
+  }
+]
+
