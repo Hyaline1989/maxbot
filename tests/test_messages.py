@@ -24,11 +24,14 @@ class MessageTests(unittest.TestCase):
         )
         self.assertIn("Менеджер подбора: Тестовый менеджер", message)
 
-    def test_group_message_omits_empty_recruitment_manager(self) -> None:
+    def test_group_message_uses_fallback_for_empty_recruitment_manager(self) -> None:
         message = build_referral_message(
             complete_referral(manager_name="")
         )
-        self.assertNotIn("Менеджер подбора:", message)
+        self.assertIn(
+            "Менеджер подбора: Перевахтовка/Приведи друга",
+            message,
+        )
 
     def test_private_message_matches_confirmed_template(self) -> None:
         referral = complete_referral(

@@ -32,14 +32,16 @@ def build_private_delivery_error(
 
 
 def build_group_referral_message(referral: Referral) -> str:
+    recruitment_manager = (
+        referral.manager_name or "Перевахтовка/Приведи друга"
+    )
     message = (
         f"Вахтовик {referral.candidate_title}, {referral.birth_date}, "
         f"номер телефона {referral.phone}, направлен на "
         f"{referral.object_name}, прибудет к вам ориентировочно "
         f"{referral.planned_arrival}, сделка: {referral.deal_url}"
     )
-    if referral.manager_name:
-        message += f"\nМенеджер подбора: {referral.manager_name}"
+    message += f"\nМенеджер подбора: {recruitment_manager}"
     return message
 
 
