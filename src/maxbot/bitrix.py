@@ -57,6 +57,7 @@ class BitrixReadClient:
         self._allowed_company_ids: set[str] = set()
         self._timeout_seconds = timeout_seconds
         self._transport = transport or self._request
+        self._deal_fields: JsonObject | None = None
 
     def get_deal(self, deal_id: str) -> JsonObject:
         normalized_id = str(deal_id)
@@ -89,6 +90,35 @@ class BitrixReadClient:
             )
         company = self._call("crm.company.get", {"id": normalized_id})
         return company
+
+    def get_deal_enumeration_text(
+        self,
+        field_name: str,
+        value: object,
+    ) -> str:
+        """Преобразует ID значений списка сделки в видимые названия."""
+        identifiers = _user_identifiers(value)
+        if not identifiers:
+            return ""
+        if self._deal_fields is None:
+            self._deal_fields = self._call("crm.deal.fields", {})
+        field = self._deal_fields.get(field_name)
+        if not isinstance(field, Mapping):
+            return ""
+        items = field.get("items") or field.get("ITEMS")
+        if not isinstance(items, list):
+            return ""
+        labels_by_id = {
+            _text(item.get("ID")): _text(item.get("VALUE"))
+            for item in items
+            if isinstance(item, Mapping)
+        }
+        labels: list[str] = []
+        for identifier in identifiers:
+            label = labels_by_id.get(identifier, "")
+            if label and label not in labels:
+                labels.append(label)
+        return ", ".join(labels)
 
     def list_recent_target_stage_deals(
         self,
@@ -232,6 +262,10 @@ class BitrixReferralReader:
             if self.additional_managers_field
             else None
         )
+        position_name = self.client.get_deal_enumeration_text(
+            "UF_CRM_1709115728",
+            deal.get("UF_CRM_1709115728"),
+        ) or _text(deal.get("UF_CRM_67F4D854D0BA5"))
 
         return Referral(
             deal_id=_text(deal.get("ID")) or str(deal_id),
@@ -241,6 +275,7 @@ class BitrixReferralReader:
             birth_date=_iso_date(contact.get("BIRTHDATE")),
             phone=_first_phone(contact.get("PHONE")),
             object_name=_text(company.get("TITLE")),
+            position_name=position_name,
             manager_name=_text(deal.get("UF_CRM_68F1ED4DB3EE8")),
             directed_at=_stable_datetime(deal.get("UF_CRM_1684488775220")),
             planned_arrival=_display_date(

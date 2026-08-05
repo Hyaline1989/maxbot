@@ -11,6 +11,8 @@ CONFIRMED_DEAL_FIELDS = {
     "planned_arrival": "UF_CRM_622F3E04D997E",
     "call_center_employee": "UF_CRM_68F1ED4DB3EE8",
     "object_name": "UF_CRM_642A972B79B02",
+    "position": "UF_CRM_1709115728",
+    "position_technical": "UF_CRM_67F4D854D0BA5",
     "contact_id": "CONTACT_ID",
 }
 

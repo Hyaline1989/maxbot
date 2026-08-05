@@ -13,6 +13,7 @@ def complete_referral(**changes: str) -> Referral:
         "birth_date": "1990-01-01",
         "phone": "+7 900 000-00-00",
         "object_name": "Тестовый объект",
+        "position_name": "Комплектовщик",
         "manager_name": "Тестовый менеджер",
         "directed_at": "2026-07-23T12:00:00+03:00",
         "planned_arrival": "30.07.2026",

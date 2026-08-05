@@ -26,6 +26,20 @@ class FakeTransport:
                     "UF_CRM_622F3E04D997E": "2026-07-30T10:00:00+03:00",
                     "UF_CRM_68F1ED4DB3EE8": "Тестовый менеджер",
                     "UF_CRM_642A972B79B02": "COMPANY_12",
+                    "UF_CRM_1709115728": ["784"],
+                    "UF_CRM_67F4D854D0BA5": "Грузчик",
+                }
+            },
+            "crm.deal.fields": {
+                "result": {
+                    "UF_CRM_1709115728": {
+                        "type": "enumeration",
+                        "isMultiple": True,
+                        "items": [
+                            {"ID": "784", "VALUE": "Грузчик"},
+                            {"ID": "785", "VALUE": "Комплектовщик"},
+                        ],
+                    }
                 }
             },
             "crm.contact.get": {
@@ -76,11 +90,17 @@ class BitrixReaderTests(unittest.TestCase):
         self.assertEqual(referral.birth_date, "1990-01-02")
         self.assertEqual(referral.phone, "+7 (900) 000-00-00")
         self.assertEqual(referral.object_name, "Тестовый объект Север")
+        self.assertEqual(referral.position_name, "Грузчик")
         self.assertEqual(referral.planned_arrival, "30.07.2026")
         self.assertEqual(referral.directed_at, "2026-07-23T00:00:00")
         self.assertEqual(
             [method for method, _ in self.transport.calls],
-            ["crm.deal.get", "crm.contact.get", "crm.company.get"],
+            [
+                "crm.deal.get",
+                "crm.contact.get",
+                "crm.company.get",
+                "crm.deal.fields",
+            ],
         )
 
     def test_unlisted_deal_is_blocked_before_request(self) -> None:
@@ -104,8 +124,27 @@ class BitrixReaderTests(unittest.TestCase):
                 "crm.deal.get",
                 "crm.contact.get",
                 "crm.company.get",
+                "crm.deal.fields",
             ],
         )
+
+    def test_reader_joins_multiple_positions_without_duplicates(self) -> None:
+        self.transport.responses["crm.deal.get"]["result"][
+            "UF_CRM_1709115728"
+        ] = ["784", "785", "784"]
+
+        referral = self.reader.read("TEST-43528")
+
+        self.assertEqual(referral.position_name, "Грузчик, Комплектовщик")
+
+    def test_reader_uses_technical_position_as_safe_fallback(self) -> None:
+        self.transport.responses["crm.deal.get"]["result"][
+            "UF_CRM_1709115728"
+        ] = []
+
+        referral = self.reader.read("TEST-43528")
+
+        self.assertEqual(referral.position_name, "Грузчик")
 
     def test_reader_gets_additional_object_managers(self) -> None:
         reader = BitrixReferralReader(

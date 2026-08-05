@@ -7,10 +7,12 @@ from .models import Referral
 
 def build_private_referral_message(referral: Referral) -> str:
     arrival = referral.planned_arrival_at or referral.planned_arrival
+    position = referral.position_name or "не указана"
     return (
         "🔔 НАПОМИНАНИЕ:\n"
         f"Вахтовик {referral.candidate_title} номер телефона {referral.phone} "
-        f"направлен на {referral.object_name} прибудет к Вам ориентировочно "
+        f"направлен на {referral.object_name} на должность {position}, "
+        f"прибудет к Вам ориентировочно "
         f"{arrival}\n\n"
         "💡 Не забудьте встретить вахтовика!"
     )
@@ -35,10 +37,12 @@ def build_group_referral_message(referral: Referral) -> str:
     recruitment_manager = (
         referral.manager_name or "Перевахтовка/Приведи друга"
     )
+    position = referral.position_name or "не указана"
     message = (
         f"Вахтовик {referral.candidate_title}, {referral.birth_date}, "
         f"номер телефона {referral.phone}, направлен на "
-        f"{referral.object_name}, прибудет к вам ориентировочно "
+        f"{referral.object_name} на должность {position}, "
+        f"прибудет к вам ориентировочно "
         f"{referral.planned_arrival}, сделка: {referral.deal_url}"
     )
     message += f"\nМенеджер подбора: {recruitment_manager}"

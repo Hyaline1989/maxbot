@@ -18,7 +18,8 @@ class MessageTests(unittest.TestCase):
             message,
             "Вахтовик Иванов Алексей Петрович, 1990-01-01, "
             "номер телефона 8 (900) 123-45-67, направлен на "
-            "Тестовый объект, прибудет к вам ориентировочно "
+            "Тестовый объект на должность Комплектовщик, "
+            "прибудет к вам ориентировочно "
             "30.07.2026, сделка: https://example.invalid/deal/TEST-1\n"
             "Менеджер подбора: Тестовый менеджер",
         )
@@ -38,6 +39,7 @@ class MessageTests(unittest.TestCase):
             candidate_title="Тарасов Максим Викторович",
             phone="+79625164193",
             object_name="Спортмастер СПБ",
+            position_name="Комплектовщик",
             planned_arrival="04.12.2025",
             planned_arrival_at="04.12.2025 10:00",
         )
@@ -46,12 +48,22 @@ class MessageTests(unittest.TestCase):
             build_private_referral_message(referral),
             "🔔 НАПОМИНАНИЕ:\n"
             "Вахтовик Тарасов Максим Викторович номер телефона +79625164193 "
-            "направлен на Спортмастер СПБ прибудет к Вам ориентировочно "
+            "направлен на Спортмастер СПБ на должность Комплектовщик, "
+            "прибудет к Вам ориентировочно "
             "04.12.2025 10:00\n\n"
             "💡 Не забудьте встретить вахтовика!",
         )
         self.assertNotIn(
             "Менеджер подбора",
+            build_private_referral_message(referral),
+        )
+
+    def test_messages_show_clear_fallback_when_position_is_empty(self) -> None:
+        referral = complete_referral(position_name="")
+
+        self.assertIn("на должность не указана", build_referral_message(referral))
+        self.assertIn(
+            "на должность не указана",
             build_private_referral_message(referral),
         )
 

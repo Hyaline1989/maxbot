@@ -15,6 +15,7 @@ class Referral:
     directed_at: str
     planned_arrival: str
     deal_url: str
+    position_name: str = ""
     created_at: str = ""
     planned_arrival_at: str = ""
     object_manager_bitrix_id: str = ""
@@ -47,6 +48,7 @@ class Referral:
             directed_at=text("directed_at"),
             planned_arrival=text("planned_arrival"),
             deal_url=text("deal_url"),
+            position_name=text("position_name"),
             planned_arrival_at=text("planned_arrival_at"),
             object_manager_bitrix_id=text("object_manager_bitrix_id"),
             additional_manager_bitrix_ids=text_tuple(
