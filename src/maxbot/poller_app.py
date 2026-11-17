@@ -10,12 +10,13 @@ from .delivery import ReferralDelivery
 from .journal import SQLiteJournal
 from .max_api import MaxClient
 from .max_registry import MaxManagerRegistry
-from .polling import DealPollingRunner
+from .polling import DealPollingRunner, RequiredFieldsGracePeriod
 from .service import ReferralProcessor
 from .validation import missing_fields
 
 
 POLL_INTERVAL_SECONDS = 10
+REQUIRED_FIELDS_GRACE_SECONDS = 30
 
 
 def main() -> int:
@@ -79,8 +80,32 @@ def main() -> int:
             manager_registry=manager_registry,
         )
 
+    validation_grace = RequiredFieldsGracePeriod(
+        REQUIRED_FIELDS_GRACE_SECONDS
+    )
+
     def inspect_deal(deal_id: str, event_key: str) -> bool:
         referral = reader.read(deal_id)
+        missing = missing_fields(referral)
+        remaining_wait = validation_grace.remaining_wait_seconds(
+            deal_id,
+            event_key,
+            has_missing_fields=bool(missing),
+        )
+        if remaining_wait:
+            # Сделка будет перечитана следующим циклом; ошибка ещё не создана.
+            print(
+                json.dumps(
+                    {
+                        "status": "waiting_for_required_fields",
+                        "deal_id": deal_id,
+                        "missing_count": len(missing),
+                        "remaining_seconds": remaining_wait,
+                    }
+                ),
+                flush=True,
+            )
+            return False
         if delivery is not None:
             result = delivery.deliver(referral, event_key=event_key)
             print(
@@ -90,7 +115,6 @@ def main() -> int:
                 flush=True,
             )
             return result.status not in {"send_failed", "private_send_failed"}
-        missing = missing_fields(referral)
         status = (
             "ignored_not_directed"
             if not referral.directed_at
@@ -126,6 +150,9 @@ def main() -> int:
             {
                 "status": "poller_started",
                 "interval_seconds": POLL_INTERVAL_SECONDS,
+                "required_fields_grace_seconds": (
+                    REQUIRED_FIELDS_GRACE_SECONDS
+                ),
                 "allowed_deal_count": len(settings.bitrix_allowed_deal_ids),
                 "discover_funnel_deals": settings.bitrix_discover_funnel_deals,
                 "max_sending_enabled": settings.max_sending_enabled,

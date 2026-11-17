@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from math import ceil
+import time
 
 from .bitrix import BitrixReadClient
 
@@ -12,6 +14,43 @@ class PollResult:
     checked_count: int
     matched_count: int
     processed_deal_ids: tuple[str, ...]
+
+
+class RequiredFieldsGracePeriod:
+    """Даёт Битрикс24 время заполнить поля после смены стадии."""
+
+    def __init__(
+        self,
+        max_wait_seconds: float = 30.0,
+        *,
+        now: Callable[[], float] | None = None,
+    ) -> None:
+        if max_wait_seconds < 0:
+            raise ValueError("Время ожидания не может быть отрицательным.")
+        self.max_wait_seconds = max_wait_seconds
+        self.now = now or time.monotonic
+        self._started_at: dict[tuple[str, str], float] = {}
+
+    def remaining_wait_seconds(
+        self,
+        deal_id: str,
+        event_key: str,
+        *,
+        has_missing_fields: bool,
+    ) -> int:
+        key = (str(deal_id), str(event_key))
+        if not has_missing_fields:
+            self._started_at.pop(key, None)
+            return 0
+
+        current = self.now()
+        started = self._started_at.setdefault(key, current)
+        remaining = self.max_wait_seconds - (current - started)
+        if remaining > 0:
+            return ceil(remaining)
+
+        self._started_at.pop(key, None)
+        return 0
 
 
 class DealPollingRunner:

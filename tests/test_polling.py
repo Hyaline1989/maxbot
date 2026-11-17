@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import unittest
 
-from maxbot.polling import DealPollingRunner
+from maxbot.polling import DealPollingRunner, RequiredFieldsGracePeriod
 
 
 class FakeListClient:
@@ -18,6 +18,50 @@ class FakeListClient:
 
 
 class PollingTests(unittest.TestCase):
+    def test_missing_fields_wait_for_thirty_seconds(self) -> None:
+        times = iter((0.0, 10.0, 20.0, 30.0))
+        grace = RequiredFieldsGracePeriod(30, now=lambda: next(times))
+
+        remaining = [
+            grace.remaining_wait_seconds(
+                "43528",
+                "stage:3:one",
+                has_missing_fields=True,
+            )
+            for _ in range(4)
+        ]
+
+        self.assertEqual(remaining, [30, 20, 10, 0])
+
+    def test_completed_fields_cancel_waiting(self) -> None:
+        times = iter((0.0, 10.0, 11.0))
+        grace = RequiredFieldsGracePeriod(30, now=lambda: next(times))
+
+        self.assertEqual(
+            grace.remaining_wait_seconds(
+                "43528",
+                "stage:3:one",
+                has_missing_fields=True,
+            ),
+            30,
+        )
+        self.assertEqual(
+            grace.remaining_wait_seconds(
+                "43528",
+                "stage:3:one",
+                has_missing_fields=False,
+            ),
+            0,
+        )
+        self.assertEqual(
+            grace.remaining_wait_seconds(
+                "43528",
+                "stage:3:one",
+                has_missing_fields=True,
+            ),
+            30,
+        )
+
     def test_only_rows_returned_for_target_stage_are_processed(self) -> None:
         client = FakeListClient(
             [
